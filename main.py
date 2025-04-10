@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
 import base64
 import re
+import sys
 import os
 import hashlib
 import markdown2
@@ -23,7 +24,7 @@ class MarkdownToProtectedHTMLConverter:
         self.timer_seconds = tk.StringVar(value="0")
 
         # Загрузка HTML-шаблона
-        self.html_template = self.load_template("template.html")
+        self.html_template = self.load_template(resource_path('template.html'))
         if self.html_template is None:
             messagebox.showerror("Error", "Could not load template.html")
             self.root.destroy()
@@ -176,7 +177,7 @@ class MarkdownToProtectedHTMLConverter:
                 return f'<div class="hint-placeholder" data-hint-id="{len(hints)-1}"></div>'
 
             # Заменяем [hint]...[/hint] на плейсхолдеры
-            processed_content = re.sub(r'\[hint\](.*?)\[/hint\]', process_hint, content, flags=re.DOTALL)
+            processed_content = re.sub(r'\[hint](.*?)\[/hint]', process_hint, content, flags=re.DOTALL)
 
             # Конвертируем основной контент (без скрытых фрагментов)
             html_content = markdown2.markdown(processed_content, extras=["tables", "fenced-code-blocks"])
@@ -216,6 +217,13 @@ class MarkdownToProtectedHTMLConverter:
 
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 
 if __name__ == "__main__":
     root = tk.Tk()

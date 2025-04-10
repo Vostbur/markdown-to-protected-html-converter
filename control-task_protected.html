@@ -118,18 +118,61 @@
   <div id="key-message"></div>
 </div>
 
-<div class="counter">Скрытых фрагментов: <span id="hidden-count">{hints_count}</span> из {hints_count}</div>
+<div class="counter">Скрытых фрагментов: <span id="hidden-count">10</span> из 10</div>
 
 <div id="content">
-  {html_content}
+  <p>Порядок выполнения контрольного задания:</p>
+
+<h3>Конфигурирование коммутатора.</h3>
+
+<ol>
+<li><p>Создание VLAN на коммутаторе</p>
+
+<div class="hint-placeholder" data-hint-id="0"></div></li>
+<li><p>Настройка access-портов</p>
+
+<div class="hint-placeholder" data-hint-id="1"></div></li>
+<li><p>Настройка trunk-портов</p>
+
+<div class="hint-placeholder" data-hint-id="2"></div></li>
+</ol>
+
+<h3>Конфигурирование маршрутизатора.</h3>
+
+<ol>
+<li><p>Конфигурирование sub-интерфейсов (внутренняя сеть)</p>
+
+<div class="hint-placeholder" data-hint-id="3"></div></li>
+<li><p>Конфигурирование протокола OSPF</p>
+
+<div class="hint-placeholder" data-hint-id="4"></div></li>
+<li><p>Конфигурирование протокола IS-IS</p>
+
+<div class="hint-placeholder" data-hint-id="5"></div></li>
+<li><p>Конфигурирование интерфейса внешней сети (протокол OSPF)</p>
+
+<div class="hint-placeholder" data-hint-id="6"></div></li>
+<li><p>Конфигурирование интерфейса внешней сети (протокол IS-IS)</p>
+
+<div class="hint-placeholder" data-hint-id="7"></div></li>
+</ol>
+
+<h3>Задание IP-адреса абонентским устройствам.</h3>
+
+<div class="hint-placeholder" data-hint-id="8"></div>
+
+<h3>Сброс настроек на маршрутизаторе.</h3>
+
+<div class="hint-placeholder" data-hint-id="9"></div>
+
 </div>
 
 <script>
-  const hints = {hints};
-  let hiddenCount = {hints_count};
+  const hints = ["DUFDVA8NUl5VVA8RERIRR11QXxFVUEVQU1BCVDsRERlHXVBfGBIRR11QXxFpEV9QXFQRZ31wfxxpHH9wfHQ7ETsNHlJeVVQPDR5BQ1QPOw==", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBF3UEJFdEVZVENfVEUAHgA7EREREUJGWEVSWUFeQ0URUFJSVEJCEUddUF8RAAE7ETsNHlJeVVQPDR5BQ1QPOw==", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBF3UEJFdEVZVENfVEUAHgE7EREREUJGWEVSWUFeQ0URXF5VVBFFQ0RfWjsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBFWWFZQU1hFVEVZVENfVEURAB4BHgcfAAE7EREREVhBEVdYQ1RGUF1dEVVYQlBTXVQ7EREREVhBEVBVVUNUQkIRAAEfAAEfAB8DHgIBOxERVElYRTsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REUNeREVUQxFeQkFXEQAROxERERFDXkRFVEMcWFURAB8AHwAfADsRERERQ1RVWEJFQ1hTREVUEVJeX19UUkVUVTsRERERUENUUBEBHwEfAR8BOxEREREREVRfUFNdVDsRERERVElYRTsRERERVF9QU11UOxERVElYRTsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REUNeREVUQxFYQlhCEQA7EREREV9URREFCB8BAQEAHwEBAQEfAQEBAR8BAQEAHwEBOxERERFDVFVYQkVDWFNERVQRUl5fX1RSRVRVOxERERFUX1BTXVQ7ERFUSVhFOxE7DR5SXlVUDw0eQUNUDzs=", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBFWWFZQU1hFVEVZVENfVEURAB4BHgk7EREREVhBEVdYQ1RGUF1dEVVYQlBTXVQ7EREREVhBEVBVVUNUQkIRAAEfAAEfAB8DAB4CATsRERERWEERXkJBVxFYX0JFUF9SVBEAOxERERFYQRFeQkFXOxERVElYRTsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBFWWFZQU1hFVEVZVENfVEURAB4BHgk7EREREVhBEVdYQ1RGUF1dEVVYQlBTXVQ7EREREVhBEVBVVUNUQkIRAAEfAAEfAB8DBB4CATsRERERWEJYQhFYX0JFUF9SVBEAOxERERFYQlhCEVRfUFNdVDsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA9hcgAXVkUKEVhBEQABHwABHwAfAB4CAREAAR8AAR8AHwM7DR5SXlVUDw0eQUNUDzs=", "DUFDVA8NUl5VVA8SEVJeQUgRQkhCRVRcC1dQUkVeQ0gcUl5fV1hWEUJIQkVUXAtSUF9VWFVQRVQcUl5fV1hWOxIRUl5cXFhFOxIRUl5fV1hDXDsNHlJeVVQPDR5BQ1QPOw=="];
+  let hiddenCount = 10;
   let decryptionKey = null;
-  const keyHash = "{key_hash}";
-  const timerData = {timer_data};
+  const keyHash = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b";
+  const timerData = {"enabled": false, "hours": 0, "minutes": 0, "seconds": 0, "end_time": null};
   let timerExpired = false;
 
   // Сохраняем открытые фрагменты в localStorage
