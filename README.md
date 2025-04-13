@@ -18,6 +18,8 @@
    ```
 ## Использование
 
+![img](UI.png)
+
 1. Запустите приложение:
    ```
    python main.py
@@ -38,7 +40,7 @@
 
 ## Собрать исполняемый файл (.exe)
    ```
-   pip install -r requirements_buld.txt
+   pip install -r requirements_build.txt
    python build.py
    ```
 ## Лицензия
