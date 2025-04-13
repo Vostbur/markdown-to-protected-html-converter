@@ -1,104 +1,128 @@
-Порядок выполнения контрольного задания:
+﻿Порядок выполнения контрольного задания:
 
 ### Конфигурирование коммутатора.
 
-1. Создание VLAN на коммутаторе
+1. Конфигурирование VLAN на коммутаторе
   
-  [hint]```
-  # vlan database
-  (vlan)# vlan X name VLAN-X-NAME
-  ```
-  [/hint]
+    [hint]
+    ```
+    MES1(config-vlan)#  vlan 4 name v4
+    MES1(config-vlan)# exit
+    MES1(config)# exit
+    ```
+    [/hint]
 
 2. Настройка access-портов
 
-  [hint]```
-  interface FastEthernet1/1
-    switchport access vlan 10
-  ```
-  [/hint]
+    [hint]
+    ```
+    MES1# configure
+    MES1(config)# interface GigabitEthernet 1/0/4
+    MES1(config-if)# switchport mode access
+    MES1(config-if)# switchport access vlan 4
+    MES1(config-if)# exit
+    ```
+    [/hint]
 
 3. Настройка trunk-портов
 
-  [hint]```
-  interface FastEthernet1/0
-    switchport mode trunk
-  ```
-  [/hint]
+    [hint]
+    ```
+    MES1(config)# interface GigabitEthernet 1/0/3
+    MES1(config-if)# switchport mode trunk
+    MES1(config-if)# switchport trunk allowed vlan add 3,4
+    MES1(config-if)# exit
+    ```
+    [/hint]
 
 ### Конфигурирование маршрутизатора.
 
-1. Конфигурирование sub-интерфейсов (внутренняя сеть)
+1. Смена режима интерфейса на routerport
 
-  [hint]```
-  interface gigabitethernet 1/0/6.10
-    ip firewall disable
-    ip address 10.10.1.2/30
-  exit
-  ```
-  [/hint]
+    [hint]
+    ```
+    esr-1# configure
+    esr-1(config)# interface gigabitethernet 1/0/2
+    esr-1(config-if-gi)# mode routerport
+    esr-1(config-if-gi)# exit
+    esr-1(config)# exit
+    ```
+    [/hint]
 
-2. Конфигурирование протокола OSPF
+2. Назначение IP-адреса интерфейса внешней сети
 
-  [hint]```
-  router ospf 1 
-    router-id 1.1.1.1
-    redistribute connected
-    area 0.0.0.0
-      enable
-    exit
-    enable
-  exit
-  ```
-  [/hint]
+    [hint]
+    ```
+    esr-1# configure
+    esr-1(config)# interface gigabitethernet 1/0/2
+    esr-1(config-if-gi)# ip address 192.168.2.1/24
+    esr-1(config-if-gi)# ip firewall disable
+    esr-1(config-if-gi)# end
+    ```
+    [/hint]
 
+3. Конфигурирование sub-интерфейсов (внутренняя сеть)
 
-3. Конфигурирование протокола IS-IS
+    [hint]
+    ```
+    esr-1(config)# interface gigabitethernet 1/0/3.4
+    esr-1(config-subif)# ip address 192.168.4.10/24
+    esr-1(config-subif)# ip firewall disable
+    esr-1(config-subif)# end
+    ```
+    [/hint]
 
-  [hint]```
-  router isis 1
-    net 49.0001.0000.0000.0001.00
-    redistribute connected
-    enable
-  exit
-  ```
-  [/hint]
+4. Конфигурирование протокола OSPF
 
-4. Конфигурирование интерфейса внешней сети (протокол OSPF)
+    [hint]
+    ```
+    esr-1# configure
+    esr(config)# router ospf 10
+    esr(config-ospf)# redistribute connected
+    esr-1(config-ospf)# area 1.1.1.1
+    esr-1(config-ospf-area)# network 192.168.2.0/24
+    esr-1(config-ospf-area)# enable
+    esr-1(config-ospf-area)# exit
+    esr-1(config-ospf)# enable
+    esr-1(config-ospf)# exit
+    ```
+    [/hint]
 
-  [hint]```
-  interface gigabitethernet 1/0/8
-    ip firewall disable
-    ip address 10.10.1.21/30
-    ip ospf instance 1
-    ip ospf
-  exit
-  ```
-  [/hint]
+5. Конфигурирование протокола IS-IS
 
-5. Конфигурирование интерфейса внешней сети (протокол IS-IS)
+    [hint]
+    ```
+    esr-1# configure
+    esr-1(config)# router isis 1
+    esr-1(config-isis)# redistribute connected
+    esr-1(config-isis)# net 49.0001.1111.1111.1111.00
+    esr-1(config-isis)# is-type level-1
+    esr-1(config-isis)# metric-style narrow level-1
+    esr-1(config-isis)# enable
+    ```
+    [/hint]
 
-  [hint]```
-  interface gigabitethernet 1/0/8
-    ip firewall disable
-    ip address 10.10.1.25/30
-    isis instance 1
-    isis enable
-  ```
-  [/hint]
+6. Конфигурирование OSPF на физических интерфейсах
 
-### Задание IP-адреса абонентским устройствам.
+    [hint]
+    ```
+    esr-1(config)# interface gigabitethernet 1/0/2
+    esr-1(config-if-gi)# ip ospf instance 10
+    esr-1(config-if-gi)# ip ospf area 1.1.1.1
+    esr-1(config-if-gi)# ip ospf
+    esr-1(config-if-gi)# exit
+    ```
+    [/hint]
 
-[hint]```
-PC1> ip 10.10.1.1/30 10.10.1.2
-```
-[/hint]
+7. Конфигурирование IS-IS на физических интерфейсах 
 
-### Сброс настроек на маршрутизаторе.
-
-[hint]```
-# copy system:factory-config system:candidate-config
-# commit
-# confirm
-```
-[/hint]
+    [hint]
+    ```
+    esr-1# configure
+    esr-1(config)# interface gigabitethernet 1/0/2
+    esr-1(config-if-gi)# isis instance 1
+    esr-1(config-if-gi)# isis enable
+    esr-1(config-if-gi)# exit
+    esr-1(config)# exit
+    ```
+    [/hint]

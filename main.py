@@ -19,9 +19,11 @@ class MarkdownToProtectedHTMLConverter:
         self.encryption_key = tk.StringVar()
         self.show_key = tk.BooleanVar(value=False)
         self.enable_timer = tk.BooleanVar(value=False)
+        self.enable_limit = tk.BooleanVar(value=False)
         self.timer_hours = tk.StringVar(value="0")
         self.timer_minutes = tk.StringVar(value="0")
         self.timer_seconds = tk.StringVar(value="0")
+        self.max_fragments = tk.StringVar(value="1")
 
         # Загрузка HTML-шаблона
         self.html_template = self.load_template(resource_path('template.html'))
@@ -85,6 +87,29 @@ class MarkdownToProtectedHTMLConverter:
         tk.Label(self.timer_fields_frame, text="Seconds:").grid(row=0, column=4)
         tk.Spinbox(self.timer_fields_frame, from_=0, to=59, textvariable=self.timer_seconds, width=3).grid(row=0, column=5)
 
+        # Фрейм для ограничения фрагментов
+        limit_frame = tk.LabelFrame(self.root, text="Fragment Access Limit", padx=5, pady=5)
+        limit_frame.pack(padx=10, pady=5, fill="x")
+
+        tk.Checkbutton(
+            limit_frame,
+            text="Enable maximum fragments limit",
+            variable=self.enable_limit,
+            command=self.toggle_limit_fields
+        ).grid(row=0, column=0, columnspan=3, sticky="w")
+
+        self.limit_fields_frame = tk.Frame(limit_frame)
+        self.limit_fields_frame.grid(row=1, column=0, columnspan=3, sticky="w")
+
+        tk.Label(self.limit_fields_frame, text="Max fragments to open:").grid(row=0, column=0)
+        tk.Spinbox(
+            self.limit_fields_frame,
+            from_=1,
+            to=100,
+            textvariable=self.max_fragments,
+            width=5
+        ).grid(row=0, column=1)
+
         output_frame = tk.LabelFrame(self.root, text="Output HTML File", padx=5, pady=5)
         output_frame.pack(padx=10, pady=5, fill="x")
 
@@ -111,6 +136,13 @@ class MarkdownToProtectedHTMLConverter:
             self.timer_fields_frame.grid()
         else:
             self.timer_fields_frame.grid_remove()
+
+    def toggle_limit_fields(self):
+        """Показывает/скрывает поля для ограничения фрагментов"""
+        if self.enable_limit.get():
+            self.limit_fields_frame.grid()
+        else:
+            self.limit_fields_frame.grid_remove()
 
     def browse_input_file(self):
         filename = filedialog.askopenfilename(
@@ -197,12 +229,19 @@ class MarkdownToProtectedHTMLConverter:
                                  timer_data['seconds'])
                 timer_data['end_time'] = (datetime.now() + timedelta(seconds=total_seconds)).isoformat()
 
+            # Подготовка данных для ограничения фрагментов
+            limit_data = {
+                'enabled': self.enable_limit.get(),
+                'max_fragments': int(self.max_fragments.get()) if self.enable_limit.get() else 0
+            }
+
             # Заполняем шаблон
             final_html = self.html_template.replace('{html_content}', html_content)
             final_html = final_html.replace('{hints}', json.dumps(hints))
             final_html = final_html.replace('{hints_count}', str(len(hints)))
             final_html = final_html.replace('{key_hash}', key_hash)
             final_html = final_html.replace('{timer_data}', json.dumps(timer_data))
+            final_html = final_html.replace('{limit_data}', json.dumps(limit_data))  # Добавляем данные об ограничении
 
             # Сохраняем результат
             with open(self.output_file.get(), 'w', encoding='utf-8') as f:

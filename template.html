@@ -108,6 +108,18 @@
       background: #f8d7da;
       color: #721c24;
     }
+    /* Стиль для сообщения о блокировке */
+    .refresh-blocked-message {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: #ff4444;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 9999;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -118,7 +130,11 @@
   <div id="key-message"></div>
 </div>
 
-<div class="counter">Скрытых фрагментов: <span id="hidden-count">{hints_count}</span> из {hints_count}</div>
+<div class="counter">Вы открыли <span id="hidden-count">{hints_count}</span> из {hints_count} фрагментов.</div>
+
+<div class="refresh-blocked-message" id="refreshBlockedMessage">
+  Обновление страницы запрещено системой
+</div>
 
 <div id="content">
   {html_content}
@@ -130,7 +146,56 @@
   let decryptionKey = null;
   const keyHash = "{key_hash}";
   const timerData = {timer_data};
+  const limitData = {limit_data};
   let timerExpired = false;
+  let fragmentsOpened = 0;
+
+  // Полная блокировка обновления страницы
+  function blockPageRefreshCompletely() {
+    // 1. Блокировка стандартных сочетаний клавиш
+    document.addEventListener('keydown', function(e) {
+      // Блокировка F5, Ctrl+R, Ctrl+F5
+      if ((e.key === 'F5') ||
+      (e.key === 'Refresh') ||
+      (e.ctrlKey && e.key === 'r') ||
+      (e.ctrlKey && e.key === 'R')) {
+        e.preventDefault();
+        e.stopPropagation();
+        showMessage("Обновление страницы запрещено", "red");
+      }
+    });
+
+    // 2. Блокировка контекстного меню (чтобы нельзя было обновить через меню)
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+
+    // 3. Полная блокировка события beforeunload
+    window.addEventListener('beforeunload', function(e) {
+      if (decryptionKey) { // Только после ввода ключа
+        e.preventDefault();
+        // Не возвращаем сообщение, чтобы не показывать диалог
+        // Просто запрещаем полностью
+        throw new Error("Обновление страницы запрещено");
+      }
+    });
+
+    // 4. Блокировка кнопки обновления в браузере (если возможно)
+    if (window.history) {
+      window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function(event) {
+        window.history.pushState(null, null, window.location.href);
+        showMessage("Навигация назад/вперед запрещена", "red");
+      };
+    }
+  }
+
+  // Проверка лимита фрагментов
+  function checkFragmentLimit() {
+    if (!limitData.enabled) return true;
+    return fragmentsOpened < limitData.max_fragments;
+  }
 
   // Сохраняем открытые фрагменты в localStorage
   function saveOpenedHints() {
@@ -155,7 +220,7 @@
     const endTime = new Date(timerData.end_time);
     if (now >= endTime) {
       const openedCount = getOpenedHintsCount();
-      const message = `Время истекло! Вы успели открыть ${openedCount} из ${hints.length} фрагментов.`;
+      const message = `Время истекло! Вы открыли ${openedCount} из ${hints.length} фрагментов.`;
 
       // Блокируем страницу
       document.body.innerHTML = `
@@ -224,6 +289,13 @@
     const msg = document.getElementById('key-message');
     msg.textContent = text;
     msg.style.color = color;
+
+    // Показываем специальное сообщение о блокировке
+    if (text.includes("Обновление") || text.includes("обновить")) {
+      const blockMsg = document.getElementById('refreshBlockedMessage');
+      blockMsg.style.display = 'block';
+      setTimeout(() => { blockMsg.style.display = 'none'; }, 3000);
+    }
   }
 
   function decryptAndReveal(index) {
@@ -235,6 +307,15 @@
     if (!decryptionKey) {
       showMessage("Сначала введите правильный ключ!", "red");
       return;
+    }
+
+    // Проверка ограничения на количество фрагментов
+    if (limitData.enabled) {
+      const openedCount = document.querySelectorAll('.hidden-content').length;
+      if (openedCount >= limitData.max_fragments) {
+        showMessage(`Достигнут лимит: можно открыть не более ${limitData.max_fragments} фрагментов`, "red");
+        return;
+      }
     }
 
     try {
@@ -273,7 +354,7 @@
 
         // Обновляем счетчик
         hiddenCount--;
-        document.getElementById('hidden-count').textContent = hiddenCount;
+        document.getElementById('hidden-count').textContent = hints.length - hiddenCount;
       });
 
     } catch (error) {
@@ -284,8 +365,10 @@
 
   // Инициализация таймера и ссылок при загрузке
   document.addEventListener('DOMContentLoaded', function() {
+    blockPageRefreshCompletely(); // Активируем полную блокировку
     setupTimer();
-    checkExpiredOnLoad();
+
+    if (checkExpiredOnLoad()) return;
 
     document.querySelectorAll('.hint-placeholder').forEach((placeholder, index) => {
       const link = document.createElement('a');
@@ -297,7 +380,12 @@
           showMessage("Время для просмотра истекло!", "red");
           return;
         }
+        if (!checkFragmentLimit()) {
+          showMessage(`Лимит открытых фрагментов достигнут (максимум ${limitData.max_fragments})`, "red");
+          return;
+        }
         decryptAndReveal(index);
+        fragmentsOpened++;
         saveOpenedHints();
       };
       placeholder.replaceWith(link);

@@ -108,6 +108,18 @@
       background: #f8d7da;
       color: #721c24;
     }
+    /* Стиль для сообщения о блокировке */
+    .refresh-blocked-message {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: #ff4444;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 9999;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -118,15 +130,19 @@
   <div id="key-message"></div>
 </div>
 
-<div class="counter">Скрытых фрагментов: <span id="hidden-count">10</span> из 10</div>
+<div class="counter">Вы открыли <span id="hidden-count">10</span> из 10 фрагментов.</div>
+
+<div class="refresh-blocked-message" id="refreshBlockedMessage">
+  Обновление страницы запрещено системой
+</div>
 
 <div id="content">
-  <p>Порядок выполнения контрольного задания:</p>
+  <p>﻿Порядок выполнения контрольного задания:</p>
 
 <h3>Конфигурирование коммутатора.</h3>
 
 <ol>
-<li><p>Создание VLAN на коммутаторе</p>
+<li><p>Конфигурирование VLAN на коммутаторе</p>
 
 <div class="hint-placeholder" data-hint-id="0"></div></li>
 <li><p>Настройка access-портов</p>
@@ -140,40 +156,87 @@
 <h3>Конфигурирование маршрутизатора.</h3>
 
 <ol>
-<li><p>Конфигурирование sub-интерфейсов (внутренняя сеть)</p>
+<li><p>Смена режима интерфейса на routerport</p>
 
 <div class="hint-placeholder" data-hint-id="3"></div></li>
-<li><p>Конфигурирование протокола OSPF</p>
+<li><p>Назначение IP-адреса интерфейса внешней сети</p>
 
 <div class="hint-placeholder" data-hint-id="4"></div></li>
-<li><p>Конфигурирование протокола IS-IS</p>
+<li><p>Конфигурирование sub-интерфейсов (внутренняя сеть)</p>
 
 <div class="hint-placeholder" data-hint-id="5"></div></li>
-<li><p>Конфигурирование интерфейса внешней сети (протокол OSPF)</p>
+<li><p>Конфигурирование протокола OSPF</p>
 
 <div class="hint-placeholder" data-hint-id="6"></div></li>
-<li><p>Конфигурирование интерфейса внешней сети (протокол IS-IS)</p>
+<li><p>Конфигурирование протокола IS-IS</p>
 
 <div class="hint-placeholder" data-hint-id="7"></div></li>
+<li><p>Конфигурирование OSPF на физических интерфейсах</p>
+
+<div class="hint-placeholder" data-hint-id="8"></div></li>
+<li><p>Конфигурирование IS-IS на физических интерфейсах </p>
+
+<div class="hint-placeholder" data-hint-id="9"></div></li>
 </ol>
-
-<h3>Задание IP-адреса абонентским устройствам.</h3>
-
-<div class="hint-placeholder" data-hint-id="8"></div>
-
-<h3>Сброс настроек на маршрутизаторе.</h3>
-
-<div class="hint-placeholder" data-hint-id="9"></div>
 
 </div>
 
 <script>
-  const hints = ["DUFDVA8NUl5VVA8RERIRR11QXxFVUEVQU1BCVDsRERlHXVBfGBIRR11QXxFpEV9QXFQRZ31wfxxpHH9wfHQ7ETsNHlJeVVQPDR5BQ1QPOw==", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBF3UEJFdEVZVENfVEUAHgA7EREREUJGWEVSWUFeQ0URUFJSVEJCEUddUF8RAAE7ETsNHlJeVVQPDR5BQ1QPOw==", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBF3UEJFdEVZVENfVEUAHgE7EREREUJGWEVSWUFeQ0URXF5VVBFFQ0RfWjsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBFWWFZQU1hFVEVZVENfVEURAB4BHgcfAAE7EREREVhBEVdYQ1RGUF1dEVVYQlBTXVQ7EREREVhBEVBVVUNUQkIRAAEfAAEfAB8DHgIBOxERVElYRTsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REUNeREVUQxFeQkFXEQAROxERERFDXkRFVEMcWFURAB8AHwAfADsRERERQ1RVWEJFQ1hTREVUEVJeX19UUkVUVTsRERERUENUUBEBHwEfAR8BOxEREREREVRfUFNdVDsRERERVElYRTsRERERVF9QU11UOxERVElYRTsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REUNeREVUQxFYQlhCEQA7EREREV9URREFCB8BAQEAHwEBAQEfAQEBAR8BAQEAHwEBOxERERFDVFVYQkVDWFNERVQRUl5fX1RSRVRVOxERERFUX1BTXVQ7ERFUSVhFOxE7DR5SXlVUDw0eQUNUDzs=", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBFWWFZQU1hFVEVZVENfVEURAB4BHgk7EREREVhBEVdYQ1RGUF1dEVVYQlBTXVQ7EREREVhBEVBVVUNUQkIRAAEfAAEfAB8DAB4CATsRERERWEERXkJBVxFYX0JFUF9SVBEAOxERERFYQRFeQkFXOxERVElYRTsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA8REVhfRVRDV1BSVBFWWFZQU1hFVEVZVENfVEURAB4BHgk7EREREVhBEVdYQ1RGUF1dEVVYQlBTXVQ7EREREVhBEVBVVUNUQkIRAAEfAAEfAB8DBB4CATsRERERWEJYQhFYX0JFUF9SVBEAOxERERFYQlhCEVRfUFNdVDsROw0eUl5VVA8NHkFDVA87", "DUFDVA8NUl5VVA9hcgAXVkUKEVhBEQABHwABHwAfAB4CAREAAR8AAR8AHwM7DR5SXlVUDw0eQUNUDzs=", "DUFDVA8NUl5VVA8SEVJeQUgRQkhCRVRcC1dQUkVeQ0gcUl5fV1hWEUJIQkVUXAtSUF9VWFVQRVQcUl5fV1hWOxIRUl5cXFhFOxIRUl5fV1hDXDsNHlJeVVQPDR5BQ1QPOw=="];
+  const hints = ["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"];
   let hiddenCount = 10;
   let decryptionKey = null;
   const keyHash = "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b";
   const timerData = {"enabled": false, "hours": 0, "minutes": 0, "seconds": 0, "end_time": null};
+  const limitData = {"enabled": false, "max_fragments": 0};
   let timerExpired = false;
+  let fragmentsOpened = 0;
+
+  // Полная блокировка обновления страницы
+  function blockPageRefreshCompletely() {
+    // 1. Блокировка стандартных сочетаний клавиш
+    document.addEventListener('keydown', function(e) {
+      // Блокировка F5, Ctrl+R, Ctrl+F5
+      if ((e.key === 'F5') ||
+      (e.key === 'Refresh') ||
+      (e.ctrlKey && e.key === 'r') ||
+      (e.ctrlKey && e.key === 'R')) {
+        e.preventDefault();
+        e.stopPropagation();
+        showMessage("Обновление страницы запрещено", "red");
+      }
+    });
+
+    // 2. Блокировка контекстного меню (чтобы нельзя было обновить через меню)
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+
+    // 3. Полная блокировка события beforeunload
+    window.addEventListener('beforeunload', function(e) {
+      if (decryptionKey) { // Только после ввода ключа
+        e.preventDefault();
+        // Не возвращаем сообщение, чтобы не показывать диалог
+        // Просто запрещаем полностью
+        throw new Error("Обновление страницы запрещено");
+      }
+    });
+
+    // 4. Блокировка кнопки обновления в браузере (если возможно)
+    if (window.history) {
+      window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function(event) {
+        window.history.pushState(null, null, window.location.href);
+        showMessage("Навигация назад/вперед запрещена", "red");
+      };
+    }
+  }
+
+  // Проверка лимита фрагментов
+  function checkFragmentLimit() {
+    if (!limitData.enabled) return true;
+    return fragmentsOpened < limitData.max_fragments;
+  }
 
   // Сохраняем открытые фрагменты в localStorage
   function saveOpenedHints() {
@@ -198,7 +261,7 @@
     const endTime = new Date(timerData.end_time);
     if (now >= endTime) {
       const openedCount = getOpenedHintsCount();
-      const message = `Время истекло! Вы успели открыть ${openedCount} из ${hints.length} фрагментов.`;
+      const message = `Время истекло! Вы открыли ${openedCount} из ${hints.length} фрагментов.`;
 
       // Блокируем страницу
       document.body.innerHTML = `
@@ -267,6 +330,13 @@
     const msg = document.getElementById('key-message');
     msg.textContent = text;
     msg.style.color = color;
+
+    // Показываем специальное сообщение о блокировке
+    if (text.includes("Обновление") || text.includes("обновить")) {
+      const blockMsg = document.getElementById('refreshBlockedMessage');
+      blockMsg.style.display = 'block';
+      setTimeout(() => { blockMsg.style.display = 'none'; }, 3000);
+    }
   }
 
   function decryptAndReveal(index) {
@@ -278,6 +348,15 @@
     if (!decryptionKey) {
       showMessage("Сначала введите правильный ключ!", "red");
       return;
+    }
+
+    // Проверка ограничения на количество фрагментов
+    if (limitData.enabled) {
+      const openedCount = document.querySelectorAll('.hidden-content').length;
+      if (openedCount >= limitData.max_fragments) {
+        showMessage(`Достигнут лимит: можно открыть не более ${limitData.max_fragments} фрагментов`, "red");
+        return;
+      }
     }
 
     try {
@@ -316,7 +395,7 @@
 
         // Обновляем счетчик
         hiddenCount--;
-        document.getElementById('hidden-count').textContent = hiddenCount;
+        document.getElementById('hidden-count').textContent = hints.length - hiddenCount;
       });
 
     } catch (error) {
@@ -327,8 +406,10 @@
 
   // Инициализация таймера и ссылок при загрузке
   document.addEventListener('DOMContentLoaded', function() {
+    blockPageRefreshCompletely(); // Активируем полную блокировку
     setupTimer();
-    checkExpiredOnLoad();
+
+    if (checkExpiredOnLoad()) return;
 
     document.querySelectorAll('.hint-placeholder').forEach((placeholder, index) => {
       const link = document.createElement('a');
@@ -340,7 +421,12 @@
           showMessage("Время для просмотра истекло!", "red");
           return;
         }
+        if (!checkFragmentLimit()) {
+          showMessage(`Лимит открытых фрагментов достигнут (максимум ${limitData.max_fragments})`, "red");
+          return;
+        }
         decryptAndReveal(index);
+        fragmentsOpened++;
         saveOpenedHints();
       };
       placeholder.replaceWith(link);
