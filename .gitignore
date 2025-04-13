@@ -1,0 +1,50 @@
+# Файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Распределение и установка
+*.egg-info/
+*.egg
+dist/
+build/
+sdist/
+*.so
+*.exe
+
+# Виртуальное окружение
+venv/
+.env/
+.venv/
+env/
+
+# Файлы IDE и редакторов
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Файлы операционных систем
+.DS_Store
+Thumbs.db
+
+# Файлы логов и БД
+*.log
+*.sqlite3
+
+# Файлы pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Файлы Jupyter Notebook
+.ipynb_checkpoints/
+
+# Файлы настроек и секретов
+*.env
+*.secret
+settings/local.py
+
+# Прочие
+*.bak
+*.tmp
