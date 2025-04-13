@@ -38,6 +38,7 @@
 
 ## Собрать исполняемый файл (.exe)
    ```
+   pip install -r requirements_buld.txt
    python build.py
    ```
 ## Лицензия
