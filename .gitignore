@@ -48,3 +48,7 @@ settings/local.py
 # Прочие
 *.bak
 *.tmp
+*.spec
+*.iml
+.gigaide/
+
